@@ -35,6 +35,41 @@ function Factorization_QR(A)
    return Q, R
 end
 #-----------------------------------------------
+using Base.Threads
+
+function Factorization_QR_Paralelo(A)
+    m,n = size(A);
+    Q = zeros(n,n);
+    R = zeros(n,n);
+
+    @threads for i in 1:n
+        Q[:, i] = (1 / norm(A[:, i])) * A[:, i]
+    end
+
+    for j = 2:n
+        P = zeros(n);
+
+        for k = 1:(j-1)
+            if length(threads) < num_threads
+                push!(threads, Threads.@spawn begin
+                    P  = P + (A[:,j]'*Q[:,k])*Q[:,k];
+                end)
+            else
+                wait(threads[1])
+                popfirst!(threads)
+            end
+        end
+
+        D = A[:,j] - P;
+
+        @threads for j in 1:n
+            Q[:,j]=(1/norm(D))*D;
+        end
+    end
+    R = Q'A;
+    return Q, R
+ end
+#-----------------------------------------------
 function GaussJordan(A,B)
    m,n = size(A);
    X = zeros(n);
