@@ -17,7 +17,7 @@ public class CreacionDS {
             i = Random.nextInt(1000);
             j = Random.nextInt(1000);
         }
-        toCsv(csvContent, "hamming.csv");
+        toCsv(csvContent, "HammingDS.csv");
     }
 
     public static void toCsv(String csvContent, String fileName){
