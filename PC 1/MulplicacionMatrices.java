@@ -15,21 +15,6 @@ private static int B[][] = new int[N+1][N+1];
 	    }
 	}
 	//--------------------------------------------
-	public static void MultiplyAXParaleloReduction(int k) {
-		for (int i = 1; i <= n; i++) {
-			int[] temp = new int[m];
-			for (int j = 1; j <= m; j++) {
-				temp[j] = A[i][j] * x[j][k];
-			}
-			for (int l = (int)(Math.log(n) / Math.log(2)); l >= 0; l--) {
-				for (int j = 1; j <= Math.pow(2, l); j++) {
-					temp[j] = temp[j] + temp[j + (int)Math.pow(2, l)];
-				}
-			}
-			B[i][k] = temp[1];
-		}
-	}
-	//--------------------------------------------
 	//Visualización de matriz
 	public static void ViewData(int[][] C) {
 	for(int i=1;i<=N;i++) {
@@ -64,7 +49,7 @@ private static int B[][] = new int[N+1][N+1];
 					//se manda a llamar a la funcion que multiplica la matriz A por la columna X[j]
 					//donde j es la fila que le toca, y están particionados según el hilo en el que está
 					for(int j = (cont-1)*T+1; j<=cont*T;j++) {
-						MultiplyAXParaleloReduction(j);
+						MultiplyAXParalelo(j);
 					}
 				}
 			}).start();
