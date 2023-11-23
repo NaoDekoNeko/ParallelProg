@@ -1,11 +1,16 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class CorrelationLIExtractor {
 
     public static void main(String[] args) {
-        int n = 100; // Ajusta según sea necesario
-        Double[][] dataset = MatrixHandling.generateMatrix(n, 4);
+        int n = 1000; // Ajusta según sea necesario
+        Double[][] dataset = MatrixHandling.generateMatrix(n, 20);
 
         MatrixHandling.matrixToTxt(dataset, "DataSet");
 
@@ -16,6 +21,16 @@ public class CorrelationLIExtractor {
         liMatrix = liVectors.toArray(liMatrix);
 
         MatrixHandling.matrixToTxt(liMatrix, "LIvectors");
+
+        // Extrae los vectores LI de manera paralela
+        int numThreads = 4; // Ajusta según sea necesario
+        List<Double[]> liVectorsParallel = extractLIvectorsParallel(dataset, numThreads);
+
+        // Convierte la lista de vectores a una matriz
+        Double[][] liMatrixParallel = new Double[liVectorsParallel.size()][];
+        liMatrixParallel = liVectorsParallel.toArray(liMatrixParallel);
+
+        MatrixHandling.matrixToTxt(liMatrixParallel, "LIvectorsParallel");
     }
 
     // Método para extraer los vectores fila LI de una matriz utilizando la correlación de Pearson
@@ -39,7 +54,7 @@ public class CorrelationLIExtractor {
             Double correlation = calculatePearsonCorrelation(v, vector);
 
             // Establece un umbral para determinar la dependencia lineal
-            Double correlationThreshold = 0.7; // Ajusta según sea necesario
+            Double correlationThreshold = 0.05; // Ajusta según sea necesario
 
             if (Math.abs(correlation) > correlationThreshold)
                 return false; // Vectores linealmente dependientes
@@ -83,5 +98,66 @@ public class CorrelationLIExtractor {
             sum += value;
         }
         return sum / vector.length;
+    }
+
+    // Método para extraer los vectores fila LI de una matriz utilizando la correlación de Pearson de manera paralela
+    public static List<Double[]> extractLIvectorsParallel(Double[][] matrix, int numThreads) {
+        int numRows = matrix.length;
+        List<Double[]> liVectors = new ArrayList<>();
+
+        ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+        List<Future<List<Double[]>>> futures = new ArrayList<>();
+
+        // Divide el trabajo en partes para cada hilo
+        int tasksPerThread = numRows / numThreads;
+
+        for (int i = 0; i < numThreads; i++) {
+            int startIndex = i * tasksPerThread;
+            int endIndex = (i == numThreads - 1) ? numRows : (i + 1) * tasksPerThread;
+
+            Callable<List<Double[]>> task = new LIExtractionTask(matrix, startIndex, endIndex);
+            Future<List<Double[]>> future = executor.submit(task);
+            futures.add(future);
+        }
+
+        // Espera a que todos los hilos completen
+        for (Future<List<Double[]>> future : futures) {
+            try {
+                liVectors.addAll(future.get());
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+
+        executor.shutdown();
+
+        return liVectors;
+    }
+
+    // Clase Callable para realizar la extracción de LI en un rango de filas de la matriz
+    static class LIExtractionTask implements Callable<List<Double[]>> {
+        private final Double[][] matrix;
+        private final int startIndex;
+        private final int endIndex;
+
+        public LIExtractionTask(Double[][] matrix, int startIndex, int endIndex) {
+            this.matrix = matrix;
+            this.startIndex = startIndex;
+            this.endIndex = endIndex;
+        }
+
+        @Override
+        public List<Double[]> call() {
+            List<Double[]> localLIVectors = new ArrayList<>();
+
+            for (int i = startIndex; i < endIndex; i++) {
+                Double[] currentVector = matrix[i];
+
+                if (isLinearlyIndependentWithCorrelation(localLIVectors, currentVector))
+                    localLIVectors.add(currentVector);
+            }
+
+            return localLIVectors;
+        }
     }
 }
