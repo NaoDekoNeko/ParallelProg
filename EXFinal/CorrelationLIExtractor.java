@@ -7,32 +7,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 public class CorrelationLIExtractor {
-    /*
-    public static void main(String[] args) {
-        int n = 1000; // Ajusta según sea necesario
-        Double[][] dataset = MatrixHandling.generateMatrix(n, 20);
-
-        MatrixHandling.matrixToTxt(dataset, "DataSet");
-
-        List<Double[]> liVectors = extractLIvectors(dataset);
-
-        // Convierte la lista de vectores a una matriz
-        Double[][] liMatrix = new Double[liVectors.size()][];
-        liMatrix = liVectors.toArray(liMatrix);
-
-        MatrixHandling.matrixToTxt(liMatrix, "LIvectors");
-
-        // Extrae los vectores LI de manera paralela
-        int numThreads = 4; // Ajusta según sea necesario
-        List<Double[]> liVectorsParallel = extractLIvectorsParallel(dataset, numThreads);
-
-        // Convierte la lista de vectores a una matriz
-        Double[][] liMatrixParallel = new Double[liVectorsParallel.size()][];
-        liMatrixParallel = liVectorsParallel.toArray(liMatrixParallel);
-
-        MatrixHandling.matrixToTxt(liMatrixParallel, "LIvectorsParallel");
-    }
-    */
     // Método para extraer los vectores fila LI de una matriz utilizando la correlación de Pearson
     public static List<Double[]> extractLIvectors(Double[][] matrix) {
         int numRows = matrix.length;
@@ -62,7 +36,7 @@ public class CorrelationLIExtractor {
         return true;
     }
 
-    private static Double calculatePearsonCorrelation(Double[] vector1, Double[] vector2) {
+    public static Double calculatePearsonCorrelation(Double[] vector1, Double[] vector2) {
         if (vector1.length != vector2.length) 
             throw new IllegalArgumentException("Los vectores deben tener la misma longitud");
     
